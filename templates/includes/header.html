@@ -3,33 +3,89 @@
     <div>
         <a class="flex items-center gap-2" href="/">
             <img class="h-6" src="{% static 'images/logo.svg' %}" alt="Logo"/>
-            <span class="text-lg font-bold">Project Title</span>
+            <span class="text-lg font-bold">Web Socket</span>
         </a>
     </div>
     <nav class="block relative">
         <ul class="navitems flex items-center justify-center h-full">
             {% if request.user.is_authenticated %}
-            <li><a href="/">Home</a></li>
-            <li x-data="{ dropdownOpen: false }" class="relative">
-                <a @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="cursor-pointer select-none">
-                    <img class="h-8 w-8 rounded-full object-cover" src="{{ request.user.profile.avatar }}" alt="Avatar" />
-                    {{ request.user.profile.name }}
-                    <img x-bind:class="dropdownOpen && 'rotate-180 duration-300'" class="w-4" src="https://img.icons8.com/small/32/ffffff/expand-arrow.png" alt="Dropdown" />
+            
+            <!-- Chat Dropdown -->
+            <li x-data="{ chatDropdown: false }" class="relative">
+                <a @click="chatDropdown = !chatDropdown" @click.away="chatDropdown = false" class="cursor-pointer flex items-center gap-2 select-none">
+                    <span>Chats</span>
+                    <img x-bind:class="chatDropdown && 'rotate-180 duration-300'" class="w-4" 
+                         src="https://img.icons8.com/small/32/ffffff/expand-arrow.png" alt="Dropdown"/>
                 </a>
-                <div x-show="dropdownOpen" x-cloak class="absolute right-0 bg-white text-black shadow rounded-lg w-40 p-2 z-20"
-                x-transition:enter="duration-300 ease-out"
-                x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
-                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                >
-                    <ul class="hoverlist [&>li>a]:justify-end">
-                        <li><a href="{% url 'profile' %}">My Profile</a></li>
-                        <li><a href="{% url 'profile-edit' %}">Edit Profile</a></li>
-                        <li><a href="{% url 'profile-settings' %}">Settings</a></li>
-                        <li><a href="{% url 'account_logout' %}">Log Out</a></li>
+                
+                <div x-show="chatDropdown" x-cloak class="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-56 p-2 z-20"
+                     x-transition:enter="duration-300 ease-out"
+                     x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+                    
+                    <ul class="hoverlist">
+                        <!-- Group Chats -->
+                        <li class="px-3 py-1 font-semibold text-gray-600">Group Chats</li>
+                        {% for chatroom in user.chat_groups.all %}
+                        {% if chatroom.groupchat_name %}
+                            <li>
+                                <a class="leading-5 text-right" href="{% url 'chatroom' chatroom.group_name %}">
+                                    {{ chatroom.groupchat_name|slice:":30" }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+
+                        <hr class="border-gray-300 my-2">
+
+                        <!-- Private Chats -->
+                        <li class="px-3 py-1 font-semibold text-gray-600">Private Chats</li>
+                        {% for chatroom in user.chat_groups.all %}
+                            {% if chatroom.is_private %}
+                                {% for member in chatroom.members.all %}
+                                    {% if member != user %}
+                                        <li>
+                                            <a href="{% url 'chatroom' chatroom.group_name %}" class="block px-3 py-2">
+                                                💬 {{ member.profile.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% empty %}
+                            <li class="px-3 py-2 text-gray-500">No Private Chats</li>
+                        {% endfor %}
                     </ul>
                 </div>
             </li>
-            
+
+            <!-- User Profile Dropdown -->
+            <li x-data="{ profileDropdown: false }" class="relative ml-6">
+                <a @click="profileDropdown = !profileDropdown" @click.away="profileDropdown = false" class="cursor-pointer flex items-center gap-2 select-none">
+                    <img class="h-8 w-8 rounded-full object-cover" 
+                         src="{{ request.user.profile.avatar|default:'https://via.placeholder.com/40' }}" 
+                         alt="Avatar" />
+                    <span>{{ request.user.profile.name|default:'Guest' }}</span>
+                    <img x-bind:class="profileDropdown && 'rotate-180 duration-300'" class="w-4" 
+                         src="https://img.icons8.com/small/32/ffffff/expand-arrow.png" alt="Dropdown"/>
+                </a>
+
+                <div x-show="profileDropdown" x-cloak class="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-40 p-2 z-20"
+                     x-transition:enter="duration-300 ease-out"
+                     x-transition:enter-start="opacity-0 -translate-y-5 scale-90"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+                    
+                    <ul class="hoverlist">
+                        <li><a href="{% url 'profile' %}" class="block px-3 py-2">My Profile</a></li>
+                        <li><a href="{% url 'profile-edit' %}" class="block px-3 py-2">Edit Profile</a></li>
+                        <li><a href="{% url 'new-groupchat' %}" class="block px-3 py-2">Create Chat</a></li>
+                        <li><a href="{% url 'profile-settings' %}" class="block px-3 py-2">Settings</a></li>
+                        <li><a href="{% url 'account_logout' %}" class="block px-3 py-2 text-red-600">Log Out</a></li>
+                    </ul>
+                </div>
+            </li>
+
             {% else %}
             <li><a href="{% url 'account_login' %}">Login</a></li>
             <li><a href="{% url 'account_signup' %}?next={% url 'profile-onboarding' %}">Signup</a></li>
