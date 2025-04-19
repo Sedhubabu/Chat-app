@@ -16,6 +16,10 @@ def chat_view(request, chatroom_name='public-chat'):
         if request.user not in chat_group.members.all():
             raise Http404()
         other_user = next((member for member in chat_group.members.all() if member != request.user), None)
+    
+    if chat_group.groupchat_name:
+        if request.user not in chat_group.members.all():
+            chat_group.members.add(request.user)
 
     if request.headers.get("HX-Request"):  
         form = ChatmessageCreateForm(request.POST)
@@ -31,6 +35,7 @@ def chat_view(request, chatroom_name='public-chat'):
         'form': form,
         'other_user': other_user,
         'chatroom_name': chatroom_name,
+        'chat_group' : chat_group
     })
 
 
