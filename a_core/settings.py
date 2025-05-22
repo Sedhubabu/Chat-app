@@ -51,6 +51,9 @@ INSTALLED_APPS = [
     'a_home',
     'a_users',
     'a_rtchat',
+    'login_history',
+
+
 ]
 
 SITE_ID = 1
